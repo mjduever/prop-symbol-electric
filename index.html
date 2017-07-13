@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>U.S. Electrical Energy Generation</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css?family=Libre+Baskerville" rel="stylesheet" type="text/css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: 'Libre Baskerville', serif;
+            color: #333333;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            display: inline-block;
+            margin-right: 20px;
+            color: #333333;
+        }
+        h2 {
+            display: inline-block;
+            color: #333333;
+        }
+        #map {
+            width: 80%;
+            height: 540px;
+            margin: 10px auto;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #333333;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Electrical Energy Generation</h1> <br>
+        <h2>for the United States, 2017</h2>
+    </header>
+
+    <div id='map'></div>
+
+    <footer>
+        <p>Map authored by M. Duever</p>
+        <p>Data for this map is from the U.S. Energy Administration's <a href="https://www.eia.gov/electricity/data/eia923/">Form EIA-923 detailed data</a>. The survey form collects detailed electric power data both monthly and annually. The sources of electricity featured on this map are <span style=color:#cc3300> Nuclear </span>, <span style=color:#1f78b4>Hydro</span>, <span style=color:#a6cee3>Wind</span>, <span style=color:#cccc00>Solar</span>, and <span style=color:#33cc33>Geothermal</span> </p>
+    </footer>
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script src="data/power-plants.js"></script>
+    <script>
+
+// center the map
+      var map = L.map('map', {
+          center: [36,-94],
+          zoom: 4,
+      });
+//add map tiles
+      var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
+      });
+
+      tiles.addTo(map);
+
+// sorts the values so larger ones are drawn first, smaller on top; goes before the L.geoJson
+      plants.features.sort(function(a, b) {
+          return b.properties.capacity_mw - a.properties.capacity_mw;
+      });
+//used for all variables
+      var commonStyles = {
+          weight: 1,
+          stroke: 1,
+          fillOpacity: .8
+  }
+
+  //add each power source as its own layer, filtered by feature, add color, size
+  var nuclearLayer = L.geoJson(plants, {
+      pointToLayer: function(feature,latlng) {
+          return L.circleMarker(latlng, commonStyles);
+      },
+      filter: function(feature) {
+          if(feature.properties.fuel_source.Nuclear) {
+              return feature;
+          }
+      },
+      style: function(feature) {
+          return {
+              color: '#cc3300',
+              fillColor: '#cc3300',
+              radius: getRadius(feature.properties.fuel_source.Nuclear)
+          }
+      },
+      // add mouseover functionality
+      onEachFeature : function (feature,layer) {
+            layer.on('mouseover', function(e){
+              e.target.setStyle({
+                fillColor: '#e60073'
+              });
+            });
+            layer.on('mouseout', function(e){
+              e.target.setStyle({
+                fillColor: '#cc3300'
+              });
+            });
+        //create tooltip text
+            var tooltip = "<b>" + layer.feature.properties.plant_name + "</b><br/>" +
+            "<b>Capacity (in MW)</b>:" + layer.feature.properties.capacity_mw +"</br>" +
+            "<b> Nuclear Capacity (in MW)</b>: " + layer.feature.properties.fuel_source.Nuclear
+            layer.bindTooltip(tooltip); //bind text and tooltip to the layer
+       }
+  }).addTo(map);
+
+
+  var hydroLayer = L.geoJson(plants, {
+      pointToLayer: function(feature,latlng) {
+          return L.circleMarker(latlng, commonStyles);
+      },
+      filter: function(feature) {
+          if(feature.properties.fuel_source.Hydro) {
+              return feature;
+          }
+      },
+      style: function(feature) {
+          return {
+              color: '#1f78b4',
+              fillColor: '#1f78b4',
+              radius: getRadius(feature.properties.fuel_source.Hydro)
+          }
+      },
+      // add mouseover functionality
+      onEachFeature : function (feature,layer) {
+            layer.on('mouseover', function(e){
+              e.target.setStyle({
+                fillColor: '#e60073'
+              });
+            });
+            layer.on('mouseout', function(e){
+              e.target.setStyle({
+                fillColor: '#1f78b4'
+              });
+            });
+
+            var tooltip = "<b>" + layer.feature.properties.plant_name + "</b><br/>" +
+            "<b>Capacity (in MW)</b>:" + layer.feature.properties.capacity_mw +"</br>" +
+            "<b> Hydro Capacity (in MW)</b>: " + layer.feature.properties.fuel_source.Hydro
+            layer.bindTooltip(tooltip); //bind text and tooltip to the layer
+
+}
+  }).addTo(map);
+
+
+  var windLayer = L.geoJson(plants, {
+      pointToLayer: function(feature,latlng) {
+          return L.circleMarker(latlng, commonStyles);
+      },
+      filter: function(feature) {
+          if(feature.properties.fuel_source.Wind) {
+              return feature;
+          }
+      },
+      style: function(feature) {
+          return {
+              color: '#a6cee3',
+              fillColor: '#a6cee3',
+              radius: getRadius(feature.properties.fuel_source.Wind)
+          }
+      },
+      // add mouseover functionality
+      onEachFeature : function (feature,layer) {
+            layer.on('mouseover', function(e){
+              e.target.setStyle({
+                fillColor: '#e60073'
+              });
+            });
+            layer.on('mouseout', function(e){
+              e.target.setStyle({
+                fillColor: '#a6cee3'
+              });
+            });
+            var tooltip = "<b>" + layer.feature.properties.plant_name + "</b><br/>" +
+            "<b>Capacity (in MW)</b>:" + layer.feature.properties.capacity_mw +"</br>" +
+            "<b> Wind Capacity (in MW)</b>: " + layer.feature.properties.fuel_source.Wind
+            layer.bindTooltip(tooltip); //bind text and tooltip to the layer
+       }
+  }).addTo(map);
+
+
+    var solarLayer = L.geoJson(plants, {
+        pointToLayer: function(feature,latlng) {
+            return L.circleMarker(latlng, commonStyles);
+        },
+        filter: function(feature) {
+            if(feature.properties.fuel_source.Solar) {
+                return feature;
+            }
+        },
+        style: function(feature) {
+            return {
+                color: '#ffff99',
+                fillColor: '#ffff99',
+                radius: getRadius(feature.properties.fuel_source.Solar)
+            }
+        },
+        // add mouseover functionality
+        onEachFeature : function (feature,layer) {
+              layer.on('mouseover', function(e){
+                e.target.setStyle({
+                  fillColor: '#e60073'
+                });
+              });
+              layer.on('mouseout', function(e){
+                e.target.setStyle({
+                  fillColor: '#ffff99'
+                });
+              });
+              var tooltip = "<b>" + layer.feature.properties.plant_name + "</b><br/>" +
+              "<b>Capacity (in MW)</b>:" + layer.feature.properties.capacity_mw +"</br>" +
+              "<b> Solar Capacity (in MW)</b>: " + layer.feature.properties.fuel_source.Solar
+              layer.bindTooltip(tooltip); //bind text and tooltip to the layer
+         }
+    }).addTo(map);
+
+
+        var geothermalLayer = L.geoJson(plants, {
+            pointToLayer: function(feature,latlng) {
+                return L.circleMarker(latlng, commonStyles);
+            },
+
+            filter: function(feature) {
+                if(feature.properties.fuel_source.Geothermal) {
+                    return feature;
+                }
+            },
+
+            style: function(feature) {
+                return {
+                    color: '#8cff66',
+                    fillColor: '#8cff66',
+                    radius: getRadius(feature.properties.fuel_source.Geothermal)
+                }
+            },
+
+            // add mouseover functionality
+            onEachFeature : function (feature,layer) {
+                  layer.on('mouseover', function(e){
+                    e.target.setStyle({
+                      fillColor: '#e60073'
+                    });
+                  });
+                  layer.on('mouseout', function(e){
+                    e.target.setStyle({
+                        fillColor: '#8cff66'
+                    });
+                  });
+                  var tooltip = "<b>" + layer.feature.properties.plant_name + "</b><br/>" +
+                  "<b>Capacity (in MW)</b>:" + layer.feature.properties.capacity_mw +"</br>" +
+                  "<b> Geothermal Capacity (in MW)</b>: " + layer.feature.properties.fuel_source.Geothermal
+                  layer.bindTooltip(tooltip); //bind text and tooltip to the layer
+             }
+        }).addTo(map);
+
+      function getRadius(area) {
+          var radius = Math.sqrt(area/Math.PI);
+          return radius * .6;
+      } //uses math to calculate the radius for the proportional symbols
+
+    </script>
+
+</body>
+
+</html>
